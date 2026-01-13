@@ -12,19 +12,52 @@ class StarryNightWallpaper {
     this.devTime = null;
     this.initDevMode();
 
+    // Controles de automação
+    this.autoBirds = true;
+    this.autoShootingStars = true;
+
+    // Temporizadores
+    this.birdsTimer = null;
+    this.shootingStarsTimer = null;
+
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
 
     this.initStars();
     this.updateScene();
     setInterval(() => this.updateScene(), 1000);
+
+    // Iniciar animações automáticas
+    this.scheduleNextBird();
+    this.scheduleNextShootingStar();
   }
 
-  // DEV MODE: Inicializar seletor de horário
+  // DEV MODE: Inicializar painel de desenvolvedor
   initDevMode() {
+    const devPanelToggle = document.getElementById('devPanelToggle');
+    const devPanelContent = document.getElementById('devPanelContent');
     const hourInput = document.getElementById('hourInput');
     const resetButton = document.getElementById('resetTimeButton');
+    const spawnBirdsButton = document.getElementById('spawnBirdsButton');
+    const spawnShootingStarButton = document.getElementById('spawnShootingStarButton');
+    const autoBirdsToggle = document.getElementById('autobirdsToggle');
+    const autoStarsToggle = document.getElementById('autoStarsToggle');
 
+    // Toggle painel
+    if (devPanelToggle && devPanelContent) {
+      devPanelToggle.addEventListener('click', () => {
+        devPanelContent.classList.toggle('show');
+      });
+
+      // Fechar ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dev-panel')) {
+          devPanelContent.classList.remove('show');
+        }
+      });
+    }
+
+    // Controle de horário
     if (hourInput) {
       hourInput.addEventListener('change', (e) => {
         const [hours, minutes] = e.target.value.split(':').map(Number);
@@ -38,6 +71,42 @@ class StarryNightWallpaper {
         this.devTime = null;
         hourInput.value = '';
         this.updateScene();
+      });
+    }
+
+    // Controle de pássaros
+    if (spawnBirdsButton) {
+      spawnBirdsButton.addEventListener('click', () => {
+        this.spawnBirdFlock();
+      });
+    }
+
+    if (autoBirdsToggle) {
+      autoBirdsToggle.addEventListener('change', (e) => {
+        this.autoBirds = e.target.checked;
+        if (this.autoBirds) {
+          this.scheduleNextBird();
+        } else {
+          clearTimeout(this.birdsTimer);
+        }
+      });
+    }
+
+    // Controle de estrelas cadentes
+    if (spawnShootingStarButton) {
+      spawnShootingStarButton.addEventListener('click', () => {
+        this.spawnShootingStar();
+      });
+    }
+
+    if (autoStarsToggle) {
+      autoStarsToggle.addEventListener('change', (e) => {
+        this.autoShootingStars = e.target.checked;
+        if (this.autoShootingStars) {
+          this.scheduleNextShootingStar();
+        } else {
+          clearTimeout(this.shootingStarsTimer);
+        }
       });
     }
   }
@@ -282,6 +351,155 @@ class StarryNightWallpaper {
 
     this.updateSky(hour, dayPeriod.intensity);
     this.drawStars(dayPeriod.intensity);
+  }
+
+  // ============ ANIMAÇÕES DE PÁSSAROS ============
+
+  createBirdSVG() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 100 50');
+    svg.setAttribute('width', '100');
+    svg.setAttribute('height', '50');
+
+    // Corpo do pássaro em formato de V
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M20,25 Q30,15 40,20 Q50,15 60,25');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '2.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+
+    svg.appendChild(path);
+    return svg;
+  }
+
+  spawnBirdFlock() {
+    const brazilTime = this.getBrazilTime();
+    const hour = brazilTime.getHours();
+
+    // Pássaros apenas durante o dia
+    if (hour < 8 || hour >= 17) return;
+
+    // Número de pássaros no bando (5-9)
+    const flockSize = 5 + Math.floor(Math.random() * 5);
+
+    // Posição Y base do bando (para manter coesão visual)
+    const baseY = Math.random() * 30 + 10; // 10% a 40% da altura
+
+    // Duração da animação para todos os pássaros do bando
+    const duration = 18 + Math.random() * 8;
+
+    for (let i = 0; i < flockSize; i++) {
+      setTimeout(() => {
+        const birdsContainer = document.getElementById('birdsContainer');
+        if (!birdsContainer) return;
+
+        const bird = document.createElement('div');
+        bird.className = 'bird';
+
+        // Posição Y com variação pequena em relação à base (mantém bando coeso)
+        const startY = baseY + (Math.random() - 0.5) * 15;
+        bird.style.top = Math.max(5, Math.min(50, startY)) + '%';
+        bird.style.left = '-50px';
+
+        // Curva similar para todos os pássaros (criam trajetória de bando)
+        const curve = (Math.random() - 0.5) * 80;
+        bird.style.setProperty('--bird-curve', curve + 'px');
+
+        // Adicionar SVG do pássaro
+        bird.appendChild(this.createBirdSVG());
+
+        // Mesma duração para todo o bando
+        bird.style.animation = `flyAcross ${duration}s linear`;
+
+        birdsContainer.appendChild(bird);
+
+        // Remover após animação
+        setTimeout(() => {
+          bird.remove();
+        }, duration * 1000);
+      }, i * 150); // Delay de 150ms entre cada pássaro do bando
+    }
+  }
+
+  scheduleNextBird() {
+    if (!this.autoBirds) return;
+
+    const brazilTime = this.getBrazilTime();
+    const hour = brazilTime.getHours();
+
+    // Apenas durante o dia
+    if (hour >= 8 && hour < 17) {
+      // Intervalo aleatório entre 25 e 50 segundos (tempo maior para bando aparecer/desaparecer)
+      const delay = 25000 + Math.random() * 25000;
+
+      this.birdsTimer = setTimeout(() => {
+        this.spawnBirdFlock();
+        this.scheduleNextBird();
+      }, delay);
+    } else {
+      // Verificar novamente em 1 minuto se não for horário de dia
+      this.birdsTimer = setTimeout(() => {
+        this.scheduleNextBird();
+      }, 60000);
+    }
+  }
+
+  // ============ ANIMAÇÕES DE ESTRELAS CADENTES ============
+
+  spawnShootingStar() {
+    const brazilTime = this.getBrazilTime();
+    const hour = brazilTime.getHours();
+
+    // Estrelas cadentes apenas durante a noite
+    if (hour >= 8 && hour < 17) return;
+
+    const container = document.getElementById('shootingStarsContainer');
+    if (!container) return;
+
+    const star = document.createElement('div');
+    star.className = 'shooting-star';
+
+    // Posição inicial aleatória (parte superior da tela)
+    const startX = Math.random() * 80 + 10; // 10% a 90% da largura
+    const startY = Math.random() * 30; // 0% a 30% da altura
+
+    star.style.left = startX + '%';
+    star.style.top = startY + '%';
+
+    // Duração aleatória
+    const duration = 0.5 + Math.random() * 0.5;
+    star.style.animation = `shootingStar ${duration}s ease-out`;
+
+    container.appendChild(star);
+
+    // Remover após animação
+    setTimeout(() => {
+      star.remove();
+    }, duration * 1000);
+  }
+
+  scheduleNextShootingStar() {
+    if (!this.autoShootingStars) return;
+
+    const brazilTime = this.getBrazilTime();
+    const hour = brazilTime.getHours();
+
+    // Apenas durante a noite
+    if (hour >= 17 || hour < 8) {
+      // Intervalo aleatório entre 15 e 45 segundos
+      const delay = 15000 + Math.random() * 30000;
+
+      this.shootingStarsTimer = setTimeout(() => {
+        this.spawnShootingStar();
+        this.scheduleNextShootingStar();
+      }, delay);
+    } else {
+      // Verificar novamente em 1 minuto se não for horário noturno
+      this.shootingStarsTimer = setTimeout(() => {
+        this.scheduleNextShootingStar();
+      }, 60000);
+    }
   }
 }
 

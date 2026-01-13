@@ -22,6 +22,12 @@
             <div class="cloud cloud-4"></div>
         </div>
         
+        <!-- Pássaros (Dia) -->
+        <div class="birds-container" id="birdsContainer"></div>
+        
+        <!-- Estrelas Cadentes (Noite) -->
+        <div class="shooting-stars-container" id="shootingStarsContainer"></div>
+        
         <!-- Montanhas -->
         <div class="mountains">
             <img src="imgs/mountains.svg" alt="Montanhas" class="mountain-svg" id="mountainsImage"/>
@@ -33,11 +39,42 @@
             <span id="currentTime">00:00</span>
         </div>
 
-        <!-- DEV MODE: Seletor de horário para testes -->
-        <div class="dev-time-selector" id="devTimeSelector">
-            <label for="hourInput">Hora de teste:</label>
-            <input type="time" id="hourInput" value="00:00">
-            <button id="resetTimeButton">Resetar</button>
+        <!-- DEV MODE: Painel de Desenvolvedor -->
+        <div class="dev-panel" id="devPanel">
+            <div class="dev-panel-toggle" id="devPanelToggle">⚙️ DEV</div>
+            <div class="dev-panel-content" id="devPanelContent">
+                <h3>Painel de Desenvolvedor</h3>
+                
+                <div class="dev-section">
+                    <label for="hourInput">⏰ Hora de teste:</label>
+                    <div class="dev-controls">
+                        <input type="time" id="hourInput" value="00:00">
+                        <button id="resetTimeButton">Resetar</button>
+                    </div>
+                </div>
+                
+                <div class="dev-section">
+                    <label>🐦 Pássaros:</label>
+                    <div class="dev-controls">
+                        <button id="spawnBirdsButton">Enviar Pássaros</button>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="autobirdsToggle" checked>
+                            <span>Auto</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="dev-section">
+                    <label>⭐ Estrelas Cadentes:</label>
+                    <div class="dev-controls">
+                        <button id="spawnShootingStarButton">Enviar Estrela</button>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="autoStarsToggle" checked>
+                            <span>Auto</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- FIM DEV MODE -->
     </div>
