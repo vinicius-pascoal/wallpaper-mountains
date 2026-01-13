@@ -120,13 +120,45 @@ class StarryNightWallpaper {
         this.ctx.fill();
       }
     }
+
+    // Desenhar constelações à noite
+    if (intensity > 0.5) {
+      this.drawConstellations(intensity);
+    }
+  }
+
+  // Desenhar constelações conectando as maiores estrelas
+  drawConstellations(intensity) {
+    const brightStars = this.stars.filter(star => star.radius > 1.2);
+
+    if (brightStars.length < 2) return;
+
+    this.ctx.strokeStyle = `rgba(255, 255, 200, ${0.2 * intensity})`;
+    this.ctx.lineWidth = 0.5;
+
+    // Conectar estrelas próximas para formar constelações
+    for (let i = 0; i < brightStars.length; i++) {
+      for (let j = i + 1; j < brightStars.length; j++) {
+        const dx = brightStars[j].x - brightStars[i].x;
+        const dy = brightStars[j].y - brightStars[i].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Conectar apenas se as estrelas estiverem a uma distância razoável
+        if (distance < 150 && distance > 20) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(brightStars[i].x, brightStars[i].y);
+          this.ctx.lineTo(brightStars[j].x, brightStars[j].y);
+          this.ctx.stroke();
+        }
+      }
+    }
   }
 
   updateSky(hour, intensity) {
     // Cores do céu em diferentes períodos
     let skyColor;
 
-    if (hour >= 18 || hour < 6) {
+    if (hour >= 17 || hour < 6) {
       // Noite
       skyColor = 'linear-gradient(180deg, #0a0e27 0%, #1a1a3e 50%, #2d2d5f 100%)';
     } else if (hour >= 6 && hour < 8) {
@@ -141,6 +173,66 @@ class StarryNightWallpaper {
     }
 
     this.sky.style.background = skyColor;
+    this.updateCelestialBody(hour, intensity);
+    this.updateClouds(hour, intensity);
+  }
+
+  // Atualizar posição e aparência do sol/lua
+  updateCelestialBody(hour, intensity) {
+    const sunMoon = document.getElementById('sunMoon');
+    if (!sunMoon) return;
+
+    const isNight = hour >= 17 || hour < 6;
+    const isDawn = hour >= 6 && hour < 8;
+
+    if (isDawn) {
+      // Amanhecer - transição do sol
+      const progress = (hour - 6 + new Date().getMinutes() / 60) / 2;
+      const sunTop = 80 - progress * 40;
+      const sunLeft = 10 + progress * 20;
+
+      sunMoon.style.background = `radial-gradient(circle, #ffb84d, #ff8c00)`;
+      sunMoon.style.top = sunTop + '%';
+      sunMoon.style.left = sunLeft + '%';
+      sunMoon.style.boxShadow = `0 0 80px rgba(255, 140, 0, 0.8)`;
+      sunMoon.style.opacity = '1';
+    } else if (hour >= 8 && hour < 17) {
+      // Dia - sol no topo
+      const dayProgress = (hour - 8) / 9;
+      const sunLeft = 15 + dayProgress * 70;
+      const sunTop = Math.sin(dayProgress * Math.PI) * 30 + 15;
+
+      sunMoon.style.background = `radial-gradient(circle, #ffeb3b, #ffd700)`;
+      sunMoon.style.top = sunTop + '%';
+      sunMoon.style.left = sunLeft + '%';
+      sunMoon.style.boxShadow = `0 0 100px rgba(255, 235, 59, 0.9)`;
+      sunMoon.style.opacity = '1';
+    } else {
+      // Noite - lua
+      const nightProgress = hour >= 17 ? (hour - 17) / 12 : (hour + 24 - 17) / 12;
+      const moonLeft = 20 + nightProgress * 60;
+      const moonTop = 15 + Math.sin(nightProgress * Math.PI) * 25;
+
+      sunMoon.style.background = `radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0)`;
+      sunMoon.style.top = moonTop + '%';
+      sunMoon.style.left = moonLeft + '%';
+      sunMoon.style.boxShadow = `0 0 60px rgba(200, 200, 200, 0.6)`;
+      sunMoon.style.opacity = '0.95';
+    }
+  }
+
+  // Atualizar nuvens durante o dia
+  updateClouds(hour, intensity) {
+    const cloudsContainer = document.getElementById('cloudsContainer');
+    if (!cloudsContainer) return;
+
+    const isDayTime = hour >= 8 && hour < 17;
+
+    if (isDayTime) {
+      cloudsContainer.classList.add('visible');
+    } else {
+      cloudsContainer.classList.remove('visible');
+    }
   }
 
   interpolateColor(color1, color2, factor) {

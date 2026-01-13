@@ -41,6 +41,105 @@ body {
   background: linear-gradient(180deg, #0a0e27 0%, #1a1a3e 50%, #2d2d5f 100%);
 }
 
+/* Sol/Lua */
+.celestial-body {
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 60px rgba(255, 255, 200, 0.6);
+  transition: all 1s ease-in-out;
+}
+
+/* Nuvens */
+.clouds-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.clouds-container.visible {
+  opacity: 1;
+}
+
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 100px;
+  opacity: 0.6;
+  animation: float 20s infinite linear;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 100px;
+}
+
+.cloud::before {
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 10px;
+}
+
+.cloud::after {
+  width: 60px;
+  height: 60px;
+  top: -30px;
+  right: 10px;
+}
+
+.cloud-1 {
+  width: 100px;
+  height: 40px;
+  top: 15%;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.cloud-2 {
+  width: 80px;
+  height: 35px;
+  top: 30%;
+  left: -80px;
+  animation-delay: 5s;
+}
+
+.cloud-3 {
+  width: 90px;
+  height: 38px;
+  top: 20%;
+  left: -90px;
+  animation-delay: 10s;
+}
+
+.cloud-4 {
+  width: 85px;
+  height: 36px;
+  top: 35%;
+  left: -85px;
+  animation-delay: 15s;
+}
+
+@keyframes float {
+  from {
+    left: -100px;
+  }
+  to {
+    left: calc(100vw + 100px);
+  }
+}
+
 /* Montanhas */
 .mountains {
   position: fixed;
