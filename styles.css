@@ -246,7 +246,7 @@ body {
   border: 2px solid #ff6b35;
   z-index: 101;
   font-family: 'Arial', sans-serif;
-  display: flex;
+  display: none;
   gap: 10px;
   align-items: center;
 }
