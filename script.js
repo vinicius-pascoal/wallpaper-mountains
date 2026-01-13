@@ -8,6 +8,10 @@ class StarryNightWallpaper {
     this.timeStatusDisplay = document.getElementById('timeStatus');
     this.sky = document.getElementById('sky');
 
+    // DEV MODE: Variável para horário de teste
+    this.devTime = null;
+    this.initDevMode();
+
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
 
@@ -16,6 +20,29 @@ class StarryNightWallpaper {
     setInterval(() => this.updateScene(), 1000);
   }
 
+  // DEV MODE: Inicializar seletor de horário
+  initDevMode() {
+    const hourInput = document.getElementById('hourInput');
+    const resetButton = document.getElementById('resetTimeButton');
+
+    if (hourInput) {
+      hourInput.addEventListener('change', (e) => {
+        const [hours, minutes] = e.target.value.split(':').map(Number);
+        this.devTime = { hours, minutes };
+        this.updateScene();
+      });
+    }
+
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        this.devTime = null;
+        hourInput.value = '';
+        this.updateScene();
+      });
+    }
+  }
+  // FIM DEV MODE
+
   resizeCanvas() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
@@ -23,6 +50,14 @@ class StarryNightWallpaper {
 
   // Obter horário de Brasília (GMT-3)
   getBrazilTime() {
+    // DEV MODE: Retornar horário de teste se definido
+    if (this.devTime) {
+      const testDate = new Date();
+      testDate.setHours(this.devTime.hours, this.devTime.minutes, 0);
+      return testDate;
+    }
+    // FIM DEV MODE
+
     const now = new Date();
     const brazilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     return brazilTime;
@@ -30,15 +65,15 @@ class StarryNightWallpaper {
 
   // Determinar o período do dia
   getDayPeriod(hour) {
-    // Noite: 18:00 - 05:59
+    // Noite: 17:00 - 05:59
     // Amanhecer: 06:00 - 07:59
-    // Dia: 08:00 - 17:59
+    // Dia: 08:00 - 16:59
 
-    if (hour >= 18 || hour < 6) {
+    if (hour >= 17 || hour < 6) {
       return { period: 'night', intensity: 1 };
     } else if (hour >= 6 && hour < 8) {
       return { period: 'dawn', intensity: (hour - 6 + (new Date().getMinutes() / 60)) / 2 };
-    } else if (hour >= 8 && hour < 18) {
+    } else if (hour >= 8 && hour < 17) {
       return { period: 'day', intensity: 0 };
     }
   }
