@@ -97,6 +97,11 @@ class StarryNightWallpaper {
   drawStars(intensity) {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    // Desenhar constelações primeiro (atrás das estrelas)
+    if (intensity > 0.3) {
+      this.drawConstellations(intensity);
+    }
+
     for (let star of this.stars) {
       star.twinklePhase += star.twinkleSpeed;
       const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7;
@@ -120,21 +125,19 @@ class StarryNightWallpaper {
         this.ctx.fill();
       }
     }
-
-    // Desenhar constelações à noite
-    if (intensity > 0.5) {
-      this.drawConstellations(intensity);
-    }
   }
 
   // Desenhar constelações conectando as maiores estrelas
   drawConstellations(intensity) {
-    const brightStars = this.stars.filter(star => star.radius > 1.2);
+    // Usar todas as estrelas, não apenas as maiores
+    const brightStars = this.stars.filter(star => star.radius > 0.7);
 
     if (brightStars.length < 2) return;
 
-    this.ctx.strokeStyle = `rgba(255, 255, 200, ${0.2 * intensity})`;
-    this.ctx.lineWidth = 0.5;
+    this.ctx.strokeStyle = `rgba(100, 149, 237, ${0.4 * intensity})`;
+    this.ctx.lineWidth = 1.2;
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
 
     // Conectar estrelas próximas para formar constelações
     for (let i = 0; i < brightStars.length; i++) {
@@ -143,8 +146,8 @@ class StarryNightWallpaper {
         const dy = brightStars[j].y - brightStars[i].y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Conectar apenas se as estrelas estiverem a uma distância razoável
-        if (distance < 150 && distance > 20) {
+        // Conectar apenas se as estrelas estiverem a uma distância razoável (densidade reduzida)
+        if (distance < 120 && distance > 40) {
           this.ctx.beginPath();
           this.ctx.moveTo(brightStars[i].x, brightStars[i].y);
           this.ctx.lineTo(brightStars[j].x, brightStars[j].y);
