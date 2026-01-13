@@ -4,8 +4,8 @@ class StarryNightWallpaper {
     this.ctx = this.canvas.getContext('2d');
     this.stars = [];
     this.timeInfo = document.getElementById('timeInfo');
+    this.currentDateDisplay = document.getElementById('currentDate');
     this.currentTimeDisplay = document.getElementById('currentTime');
-    this.timeStatusDisplay = document.getElementById('timeStatus');
     this.sky = document.getElementById('sky');
 
     // DEV MODE: Variável para horário de teste
@@ -263,17 +263,16 @@ class StarryNightWallpaper {
     const hour = brazilTime.getHours();
     const minutes = String(brazilTime.getMinutes()).padStart(2, '0');
 
+    // Atualizar data
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const day = brazilTime.getDate();
+    const month = monthNames[brazilTime.getMonth()];
+    this.currentDateDisplay.textContent = `${month} ${day}`;
+
+    // Atualizar hora
     this.currentTimeDisplay.textContent = `${String(hour).padStart(2, '0')}:${minutes}`;
 
     const dayPeriod = this.getDayPeriod(hour);
-
-    if (dayPeriod.period === 'night') {
-      this.timeStatusDisplay.textContent = 'Noite';
-    } else if (dayPeriod.period === 'dawn') {
-      this.timeStatusDisplay.textContent = 'Amanhecer';
-    } else {
-      this.timeStatusDisplay.textContent = 'Dia';
-    }
 
     return { hour, dayPeriod };
   }
