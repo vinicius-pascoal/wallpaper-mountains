@@ -593,15 +593,15 @@ class StarryNightWallpaper {
       const index = Math.floor((i / barCount) * audioArray.length);
       const value = audioArray[index] || 0;
 
-      // Suavizar valores para animação fluida mas responsável
-      this.smoothValues[i] = this.smoothValues[i] * 0.75 + value * 0.25;
+      // Suavizar valores com mais inércia para animação suave e menos travamentos
+      this.smoothValues[i] = this.smoothValues[i] * 0.8 + value * 0.2;
       const smoothed = this.smoothValues[i];
 
-      // Barras ficam invisíveis (scale 0) sem som e crescem com o áudio (altura aumentada)
-      const audioScale = smoothed * 7; // Multiplicador aumentado para maior reação
+      // Barras ficam invisíveis (scale 0) sem som e crescem com o áudio
+      const audioScale = Math.min(smoothed * 6, 8); // Limitado para evitar valores extremos
       this.audioBars[i].style.transform = `scaleY(${audioScale})`;
-      // Ajustar opacidade baseada no valor do áudio
-      this.audioBars[i].style.opacity = Math.min(smoothed * 4, 1);
+      // Ajustar opacidade baseada no valor do áudio com suavização
+      this.audioBars[i].style.opacity = Math.min(smoothed * 3, 1);
     }
 
     // Detecção de batida com efeito na montanha
@@ -639,10 +639,10 @@ class StarryNightWallpaper {
 
     // Aplicar filtro de brilho e tremulação quando há graves
     if (bassLevel > this.threshold) {
-      const brightness = 1 + (bassLevel * 1); // Aumenta brilho com graves (intensidade dobrada)
-      // Adicionar tremulação mais forte
-      const shakeX = (Math.random() - 0.5) * 3;
-      const shakeY = (Math.random() - 0.5) * 2;
+      const brightness = 1 + (bassLevel * 0.8); // Brilho controlado
+      // Adicionar tremulação suave e otimizada
+      const shakeX = (Math.random() - 0.5) * 2;
+      const shakeY = (Math.random() - 0.5) * 1.5;
       mountainSvg.style.filter = `brightness(${brightness}) drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))`;
       mountainSvg.style.transform = `translateX(${shakeX}px) translateY(${shakeY}px)`;
     } else {
@@ -663,13 +663,17 @@ class StarryNightWallpaper {
   simulateAudio() {
     setInterval(() => {
       const audioArray = [];
-      for (let i = 0; i < 128; i++) {
-        // Simular valores de áudio com base em frequências (reduzido)
-        const randomValue = Math.random() * Math.sin(Date.now() / 1000 + i / 10);
-        audioArray.push(Math.abs(randomValue) * 0.4);
+      for (let i = 0; i < 64; i++) {
+        // Simular valores de áudio suavemente
+        const randomValue = Math.random() * Math.sin(Date.now() / 1500 + i / 10);
+        audioArray.push(Math.abs(randomValue) * 0.35);
+      }
+      // Expandir para 128 frequências
+      while (audioArray.length < 128) {
+        audioArray.push(audioArray[audioArray.length - 64] || 0);
       }
       this.updateAudioVisualizer(audioArray);
-    }, 50);
+    }, 33); // ~30fps ao invés de 50fps
   }
 }
 
