@@ -141,6 +141,72 @@ body {
   }
 }
 
+/* Equalizador de Áudio */
+.audio-equalizer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0;
+  z-index: 1;
+  pointer-events: none;
+  gap: 0.5px;
+}
+
+.audio-bar {
+  flex: 1;
+  min-width: 2px;
+  min-height: 0.5vh;
+  background: linear-gradient(to top,
+      rgba(204, 0, 0, 0.9) 0%,
+      rgba(182, 0, 43, 0.9) 25%,
+      rgba(160, 0, 87, 0.85) 50%,
+      rgba(136, 0, 136, 0.8) 75%,
+      rgba(170, 0, 170, 0.75) 100%);
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  transition: transform 0.02s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.05s cubic-bezier(0.1, 0.8, 0.2, 1);
+  box-shadow: 0 0 20px rgba(160, 0, 87, 0.6),
+    0 -2px 25px rgba(204, 0, 0, 0.5);
+  filter: blur(0.3px);
+  opacity: 0;
+}
+
+.audio-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 100%);
+  border-radius: 4px 4px 0 0;
+}
+
+body.beat .audio-equalizer {
+  animation: equalizerPulse 0.15s ease-out;
+}
+
+@keyframes equalizerPulse {
+  0% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.5);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
 /* Pássaros */
 .birds-container {
   position: absolute;
@@ -263,6 +329,8 @@ body {
   object-fit: cover;
   object-position: bottom center;
   filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 2;
 }
 
 /* Informação de horário */

@@ -30,6 +30,9 @@ class StarryNightWallpaper {
     // Iniciar animações automáticas
     this.scheduleNextBird();
     this.scheduleNextShootingStar();
+
+    // Inicializar equalizador de áudio
+    this.initAudioEqualizer();
   }
 
   // DEV MODE: Inicializar painel de desenvolvedor
@@ -501,6 +504,161 @@ class StarryNightWallpaper {
       }, 60000);
     }
   }
+
+  // Inicializar equalizador de áudio
+  initAudioEqualizer() {
+    const barCount = 128;
+    const equalizer = document.getElementById('audioEqualizer');
+    this.audioBars = [];
+    this.baseHeights = [];
+
+    // Criar barras do equalizador com alturas base seguindo curvatura da montanha
+    for (let i = 0; i < barCount; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'audio-bar';
+
+      // Calcular altura base seguindo perfil de montanha
+      const position = i / barCount; // 0 a 1
+      const baseHeight = this.calculateMountainCurve(position);
+      this.baseHeights.push(baseHeight);
+
+      bar.style.height = baseHeight + 'vh';
+      equalizer.appendChild(bar);
+      this.audioBars.push(bar);
+    }
+
+    // Variáveis para detecção de batida
+    this.lastBeatTime = 0;
+    this.bpm = 0;
+    this.beatCooldown = 300;
+    this.threshold = 0.25;
+    this.bassSmooth = 0;
+
+    // Inicializar listener de áudio
+    this.initAudioListener();
+  }
+
+  // Calcular curvatura da montanha para cada posição
+  calculateMountainCurve(position) {
+    // Baseado nos pontos do mountains.svg (viewBox='0 0 1600 900')
+    // Normalizar posição para 0-1600
+    const x = position * 1600;
+    
+    // Pico principal em x=957, y=450 (altura 900-450=450)
+    const peak1 = Math.exp(-Math.pow((x - 957) / 200, 2)) * 50;
+    
+    // Pico em x=398, y=662 (altura 900-662=238)
+    const peak2 = Math.exp(-Math.pow((x - 398) / 180, 2)) * 26;
+    
+    // Pico em x=1203, y=546 (altura 900-546=354)
+    const peak3 = Math.exp(-Math.pow((x - 1203) / 220, 2)) * 39;
+    
+    // Pico em x=641, y=695 (altura 900-695=205)
+    const peak4 = Math.exp(-Math.pow((x - 641) / 150, 2)) * 22;
+    
+    // Pico em x=1401, y=632 (altura 900-632=268)
+    const peak5 = Math.exp(-Math.pow((x - 1401) / 170, 2)) * 29;
+    
+    // Pico em x=971, y=687 (altura 900-687=213)
+    const peak6 = Math.exp(-Math.pow((x - 971) / 140, 2)) * 23;
+    
+    // Altura base mínima (quase zero para ficar invisível sem som)
+    const baseHeight = 0.5;
+    
+    return baseHeight + peak1 + peak2 + peak3 + peak4 + peak5 + peak6;
+  }
+
+  // Inicializar listener de áudio
+  initAudioListener() {
+    // Registrar listener de áudio do Wallpaper Engine
+    if (window.wallpaperRegisterAudioListener) {
+      window.wallpaperRegisterAudioListener((audioArray) => {
+        this.updateAudioVisualizer(audioArray);
+      });
+    } else {
+      // Simulação para testes fora do Wallpaper Engine
+      this.simulateAudio();
+    }
+  }
+
+  // Variáveis para suavização de valores
+  smoothValues = new Array(128).fill(0);
+
+  // Atualizar visualizador de áudio
+  updateAudioVisualizer(audioArray) {
+    const barCount = this.audioBars.length;
+
+    // Atualizar altura das barras - crescem apenas com som
+    for (let i = 0; i < barCount; i++) {
+      const index = Math.floor((i / barCount) * audioArray.length);
+      const value = audioArray[index] || 0;
+      
+      // Suavizar valores para animação mais fluida
+      this.smoothValues[i] = this.smoothValues[i] * 0.85 + value * 0.15;
+      const smoothed = this.smoothValues[i];
+      
+      // Barras ficam invisíveis (scale 0) sem som e crescem com o áudio
+      const audioScale = smoothed * 8; // Multiplicador alto para reação visível
+      this.audioBars[i].style.transform = `scaleY(${audioScale})`;
+      // Ajustar opacidade baseada no valor do áudio
+      this.audioBars[i].style.opacity = Math.min(smoothed * 3, 1);
+    }
+
+    // Detecção de batida
+    let bass = 0;
+    for (let i = 0; i < 8; i++) {
+      bass += audioArray[i];
+    }
+    bass /= 8;
+
+    this.bassSmooth = this.bassSmooth * 0.8 + bass * 0.2;
+
+    const now = performance.now();
+
+    if (this.bassSmooth > this.threshold && now - this.lastBeatTime > this.beatCooldown) {
+      const interval = now - this.lastBeatTime;
+      this.lastBeatTime = now;
+
+      if (interval > 0) {
+        this.bpm = Math.round(60000 / interval);
+      }
+
+      if (this.bpm > 60 && this.bpm < 200) {
+        this.triggerBeat();
+      }
+    }
+  }
+
+  // Disparar animação de batida
+  triggerBeat() {
+    document.body.classList.remove('beat');
+    void document.body.offsetWidth;
+    document.body.classList.add('beat');
+  }
+
+  // Simulação de áudio para testes
+  simulateAudio() {
+    setInterval(() => {
+      const audioArray = [];
+      for (let i = 0; i < 128; i++) {
+        // Simular valores de áudio com base em frequências (reduzido)
+        const randomValue = Math.random() * Math.sin(Date.now() / 1000 + i / 10);
+        audioArray.push(Math.abs(randomValue) * 0.4);
+      }
+      this.updateAudioVisualizer(audioArray);
+    }, 50);
+  }
+}
+
+// Registrar propriedades do Wallpaper Engine (opcional)
+if (window.wallpaperPropertyListener) {
+  window.wallpaperPropertyListener = {
+    applyUserProperties: function (properties) {
+      if (properties.audioSensitivity) {
+        wallpaper.threshold = properties.audioSensitivity.value;
+      }
+    }
+  };
 }
 
 // Inicializar quando o documento carregar
