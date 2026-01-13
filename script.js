@@ -531,7 +531,7 @@ class StarryNightWallpaper {
     this.lastBeatTime = 0;
     this.bpm = 0;
     this.beatCooldown = 300;
-    this.threshold = 0.25;
+    this.threshold = 0.12;
     this.bassSmooth = 0;
 
     // Inicializar listener de áudio
@@ -543,28 +543,28 @@ class StarryNightWallpaper {
     // Baseado nos pontos do mountains.svg (viewBox='0 0 1600 900')
     // Normalizar posição para 0-1600
     const x = position * 1600;
-    
+
     // Pico principal em x=957, y=450 (altura 900-450=450)
     const peak1 = Math.exp(-Math.pow((x - 957) / 200, 2)) * 50;
-    
+
     // Pico em x=398, y=662 (altura 900-662=238)
     const peak2 = Math.exp(-Math.pow((x - 398) / 180, 2)) * 26;
-    
+
     // Pico em x=1203, y=546 (altura 900-546=354)
     const peak3 = Math.exp(-Math.pow((x - 1203) / 220, 2)) * 39;
-    
+
     // Pico em x=641, y=695 (altura 900-695=205)
     const peak4 = Math.exp(-Math.pow((x - 641) / 150, 2)) * 22;
-    
+
     // Pico em x=1401, y=632 (altura 900-632=268)
     const peak5 = Math.exp(-Math.pow((x - 1401) / 170, 2)) * 29;
-    
+
     // Pico em x=971, y=687 (altura 900-687=213)
     const peak6 = Math.exp(-Math.pow((x - 971) / 140, 2)) * 23;
-    
+
     // Altura base mínima (quase zero para ficar invisível sem som)
     const baseHeight = 0.5;
-    
+
     return baseHeight + peak1 + peak2 + peak3 + peak4 + peak5 + peak6;
   }
 
@@ -592,19 +592,19 @@ class StarryNightWallpaper {
     for (let i = 0; i < barCount; i++) {
       const index = Math.floor((i / barCount) * audioArray.length);
       const value = audioArray[index] || 0;
-      
-      // Suavizar valores para animação mais fluida
-      this.smoothValues[i] = this.smoothValues[i] * 0.85 + value * 0.15;
+
+      // Suavizar valores para animação fluida mas responsável
+      this.smoothValues[i] = this.smoothValues[i] * 0.75 + value * 0.25;
       const smoothed = this.smoothValues[i];
-      
-      // Barras ficam invisíveis (scale 0) sem som e crescem com o áudio
-      const audioScale = smoothed * 8; // Multiplicador alto para reação visível
+
+      // Barras ficam invisíveis (scale 0) sem som e crescem com o áudio (altura aumentada)
+      const audioScale = smoothed * 7; // Multiplicador aumentado para maior reação
       this.audioBars[i].style.transform = `scaleY(${audioScale})`;
       // Ajustar opacidade baseada no valor do áudio
-      this.audioBars[i].style.opacity = Math.min(smoothed * 3, 1);
+      this.audioBars[i].style.opacity = Math.min(smoothed * 4, 1);
     }
 
-    // Detecção de batida
+    // Detecção de batida com efeito na montanha
     let bass = 0;
     for (let i = 0; i < 8; i++) {
       bass += audioArray[i];
@@ -626,6 +626,29 @@ class StarryNightWallpaper {
       if (this.bpm > 60 && this.bpm < 200) {
         this.triggerBeat();
       }
+    }
+
+    // Aplicar efeito de congelamento na montanha com graves
+    this.applyMountainGraveEffect(this.bassSmooth);
+  }
+
+  // Aplicar efeito visual na montanha com sons graves
+  applyMountainGraveEffect(bassLevel) {
+    const mountainSvg = document.getElementById('mountainsImage');
+    if (!mountainSvg) return;
+
+    // Aplicar filtro de brilho e tremulação quando há graves
+    if (bassLevel > this.threshold) {
+      const brightness = 1 + (bassLevel * 1); // Aumenta brilho com graves (intensidade dobrada)
+      // Adicionar tremulação mais forte
+      const shakeX = (Math.random() - 0.5) * 3;
+      const shakeY = (Math.random() - 0.5) * 2;
+      mountainSvg.style.filter = `brightness(${brightness}) drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))`;
+      mountainSvg.style.transform = `translateX(${shakeX}px) translateY(${shakeY}px)`;
+    } else {
+      // Voltar ao normal
+      mountainSvg.style.filter = 'drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))';
+      mountainSvg.style.transform = 'translateX(0) translateY(0)';
     }
   }
 
